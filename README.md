@@ -1,3 +1,10 @@
-cd BadgeInterfaceFlutter 
+# BadgeInterfaceFlutter
+
+## Getting Started
+
+To run this Flutter project in Chrome:
+
+```bash
+cd BadgeInterfaceFlutter
 flutter run
-select chrome via pressing "2"
+
