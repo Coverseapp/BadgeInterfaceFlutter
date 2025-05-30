@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
@@ -66,6 +67,19 @@ class _BadgeFormPageState extends State<BadgeFormPage> {
 
 		conditionLabels.add("Add Condition");
   	}
+
+		@override
+		void dispose() 
+		{
+		// Dispose all controllers to prevent memory leaks
+			for (var controller in controllers) {
+				controller.dispose();
+			}
+			for (var controller in conditionControllers) {
+				controller.dispose();
+			}
+			super.dispose();
+		}
 
 	void _addInputField(label)
 	{
@@ -182,6 +196,39 @@ class _BadgeFormPageState extends State<BadgeFormPage> {
   		});
 	}
 
+	Future<void> _sendDBasync() async
+	{
+		Map<String, dynamic> map = {};
+		Map conditions = {};
+		for(int i = 1; i < labels.length; i++)
+		{
+			print("$i ${labels[i]} ${controllers[i].text.trim()} ");
+			map[labels[i]] = controllers[i].text.trim();
+		}
+		for(int i = 1 ; i < conditionLabels.length; i++)
+		{
+			conditions[conditionLabels[i]] = conditionControllers[i].text.trim();
+		}
+		map["conditions"] = conditions;
+
+		const String mongoURL = 'mongodb://localhost:27017/AdminPanelDB';
+		final db = mongo.Db(mongoURL);
+
+		try {
+			await db.open();
+			final collection = db.collection('badges'); // Your collection name
+			
+			await collection.insertOne(map);
+			print('Data inserted successfully');
+			
+		} catch (e) {
+			print('MongoDB error: $e');
+			throw e;
+		} finally {
+			await db.close();
+		}
+	}
+
   	@override
  	Widget build(BuildContext context) {
     	return Scaffold(
@@ -287,7 +334,7 @@ class _BadgeFormPageState extends State<BadgeFormPage> {
 							Padding(
 								padding: EdgeInsets.all(4),
 								child: ElevatedButton(
-									onPressed: _preview,
+									onPressed: _sendDBasync,
 									child: Text("Send to DB"),
 									),
 									),
